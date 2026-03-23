@@ -45,3 +45,20 @@ def is_rate_limited(access_token: str, limit=10, window=60):
         r.expire(key, window)
 
     return current > limit
+
+def is_submit_rate_limited(access_token: str, limit=1, window=300):
+    user_id = r.get(f"token:{access_token}")
+
+    if user_id is None:
+        user_id = fetch_user_id_from_token(access_token=access_token)
+        if user_id:
+            r.setex(f"token:{access_token}", 3600, user_id)
+        else:
+            return True
+
+    key = f"submit_rate:{user_id}"
+    current = r.incr(key)
+    if current == 1:
+        r.expire(key, window)
+
+    return current > limit

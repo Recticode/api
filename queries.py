@@ -27,3 +27,15 @@ def get_challenge_repo(name):
         return challenge
     finally:
         pool.putconn(connection)
+
+def add_challenge_passed(github_id, challenge_name):
+    connection = pool.getconn()
+
+    try:
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("INSERT INTO passed (github_user_id, challenge_name) VALUES (%s, %s)",
+                       (github_id, challenge_name))
+        connection.commit()
+        cursor.close()
+    finally:
+        pool.putconn(connection)
