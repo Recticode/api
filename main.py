@@ -39,19 +39,22 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
         if challenge is None:
             raise HTTPException(status_code=400, detail="challenge name does not exist")
 
-        with open('zipfile.zip', 'rb') as f:
-            headers = {
-                "x-internal-key": os.getenv("INTERNAL_KEY")
-            }
-            r = requests.post(os.getenv("SUBMIT_URL"), files={'file': f},
-                              headers=headers)
-            correct = r.json()['correct']
-            total = r.json()['total']
-            if correct == total:
-                github_user_id = fetch_user_id_from_token(token)
-                challenge_done = has_challenge_been_done(github_user_id, challenge_name)
-                if challenge_done is None:
-                    add_challenge_passed(github_user_id, challenge_name)
-                return {"passed": True, correct: correct, total: total}
-            else:
-                return {"passed": False, correct: correct, total: total}
+        headers = {
+            "x-internal-key": os.getenv("INTERNAL_KEY")
+        }
+
+        r = requests.post(
+            os.getenv("SUBMIT_URL"),
+            files={'file': (file.filename, file.file, file.content_type)},
+            headers=headers
+        )
+        correct = r.json()['correct']
+        total = r.json()['total']
+        if correct == total:
+            github_user_id = fetch_user_id_from_token(token)
+            challenge_done = has_challenge_been_done(github_user_id, challenge_name)
+            if challenge_done is None:
+                add_challenge_passed(github_user_id, challenge_name)
+            return {"passed": True, correct: correct, total: total}
+        else:
+            return {"passed": False, correct: correct, total: total}
