@@ -55,6 +55,6 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
             challenge_done = has_challenge_been_done(github_user_id, challenge_name)
             if challenge_done is None:
                 add_challenge_passed(github_user_id, challenge_name)
-            return {"passed": True, correct: correct, total: total}
+            return {"passed": True, "correct": correct, "total": total}
         else:
-            return {"passed": False, correct: correct, total: total}
+            return {"passed": False, "correct": correct, "total": total}
