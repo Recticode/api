@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
-from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done
+from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done, get_user_passed_challenges
 from ratelimit import is_rate_limited, is_submit_rate_limited, fetch_user_id_from_token
 from fastapi import HTTPException
 import os
@@ -29,6 +29,16 @@ def challenge_repo(name: str, token: str | None = None):
             return {"error": "Challenge name does not exist"}
         else:
             return {"repo_name": "https://github.com/Recticode/" + challenge['repo_name']}
+
+@app.get("/passed_challenges")
+def passed_challenges(token: str | None = None):
+    if is_rate_limited(token):
+        raise HTTPException(status_code=429, detail="rate limited")
+    else:
+        github_user_id = fetch_user_id_from_token(token)
+        challenges = get_user_passed_challenges(github_user_id)
+        return {"challenges": challenges}
+
 
 @app.post("/submit/{challenge_name}")
 def submit(challenge_name: str, file: UploadFile = File(...), token: str | None = None):
