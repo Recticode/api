@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
-from queries import get_challenges, get_challenge_repo, add_challenge_passed
+from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done
 from ratelimit import is_rate_limited, is_submit_rate_limited, fetch_user_id_from_token
 from fastapi import HTTPException
 import os
@@ -45,12 +45,13 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
             }
             r = requests.post(os.getenv("SUBMIT_URL"), files={'file': f},
                               headers=headers)
-            print(r.json())
             correct = r.json()['correct']
             total = r.json()['total']
             if correct == total:
                 github_user_id = fetch_user_id_from_token(token)
-                add_challenge_passed(github_user_id, challenge_name)
+                challenge_done = has_challenge_been_done(github_user_id, challenge_name)
+                if challenge_done is None:
+                    add_challenge_passed(github_user_id, challenge_name)
                 return {"passed": True, correct: correct, total: total}
             else:
                 return {"passed": False, correct: correct, total: total}

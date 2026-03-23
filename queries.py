@@ -39,3 +39,16 @@ def add_challenge_passed(github_id, challenge_name):
         cursor.close()
     finally:
         pool.putconn(connection)
+
+def has_challenge_been_done(github_id, challenge_name):
+    connection = pool.getconn()
+
+    try:
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT challenge_name FROM passed WHERE challenge_name = %s AND github_user_id = %s",
+                       (challenge_name, github_id))
+        challenge = cursor.fetchone()
+        cursor.close()
+        return challenge
+    finally:
+        pool.putconn(connection)
