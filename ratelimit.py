@@ -46,7 +46,7 @@ def is_rate_limited(access_token: str, limit=10, window=60):
 
     return current > limit
 
-def is_submit_rate_limited(access_token: str, limit=1, window=300):
+def is_submit_rate_limited(access_token: str, limit=3, window=300):
     user_id = r.get(f"token:{access_token}")
 
     if user_id is None:

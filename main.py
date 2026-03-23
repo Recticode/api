@@ -44,7 +44,7 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
         }
 
         r = requests.post(
-            os.getenv("SUBMIT_URL"),
+            os.getenv("SUBMIT_URL") + "/" + challenge_name,
             files={'file': (file.filename, file.file, file.content_type)},
             headers=headers
         )
