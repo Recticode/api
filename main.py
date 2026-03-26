@@ -58,8 +58,12 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
             files={'file': (file.filename, file.file, file.content_type)},
             headers=headers
         )
-        correct = r.json()['correct']
-        total = r.json()['total']
+        resp_json = r.json()
+        correct = resp_json.get('correct')
+        total = resp_json.get('total')
+        if correct is None or total is None:
+            raise HTTPException(status_code=500, detail="submit server returned invalid response")
+
         if correct == total:
             github_user_id = fetch_user_id_from_token(token)
             challenge_done = has_challenge_been_done(github_user_id, challenge_name)
