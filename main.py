@@ -58,7 +58,23 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
             files={'file': (file.filename, file.file, file.content_type)},
             headers=headers
         )
-        resp_json = r.json()
+        print("STATUS:", r.status_code)
+        print("BODY:", r.text)
+
+        if r.status_code != 200:
+            raise HTTPException(
+                status_code=500,
+                detail=f"submit server error: {r.status_code}"
+            )
+
+        try:
+            resp_json = r.json()
+        except Exception:
+            raise HTTPException(
+                status_code=500,
+                detail=f"submit returned non-json: {r.text}"
+            )
+
         correct = resp_json.get('correct')
         total = resp_json.get('total')
         if correct is None or total is None:
