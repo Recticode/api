@@ -1,8 +1,8 @@
-from db import pool
+from db import get_connection
 from psycopg2.extras import RealDictCursor
 
 def get_challenges():
-    connection = pool.getconn()  # grab a connection from the pool
+    connection = get_connection()
 
     try:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -12,10 +12,10 @@ def get_challenges():
         return challenges
 
     finally:
-        pool.putconn(connection)  # return connection to the pool
+        connection.close()
 
 def get_challenge_repo(name):
-    connection = pool.getconn()
+    connection = get_connection()
 
     try:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -26,10 +26,10 @@ def get_challenge_repo(name):
         cursor.close()
         return challenge
     finally:
-        pool.putconn(connection)
+        connection.close()
 
 def add_challenge_passed(github_id, challenge_name):
-    connection = pool.getconn()
+    connection = get_connection()
 
     try:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -38,10 +38,10 @@ def add_challenge_passed(github_id, challenge_name):
         connection.commit()
         cursor.close()
     finally:
-        pool.putconn(connection)
+        connection.close()
 
 def has_challenge_been_done(github_id, challenge_name):
-    connection = pool.getconn()
+    connection = get_connection()
 
     try:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -51,10 +51,10 @@ def has_challenge_been_done(github_id, challenge_name):
         cursor.close()
         return challenge
     finally:
-        pool.putconn(connection)
+        connection.close()
 
 def get_user_passed_challenges(github_id):
-    connection = pool.getconn()
+    connection = get_connection()
 
     try:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -64,4 +64,4 @@ def get_user_passed_challenges(github_id):
         cursor.close()
         return challenges
     finally:
-        pool.putconn(connection)
+        connection.close()

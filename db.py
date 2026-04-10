@@ -1,11 +1,8 @@
-from dotenv import load_dotenv
+import psycopg2
 import os
-from psycopg2.pool import SimpleConnectionPool
+from dotenv import load_dotenv
 
 load_dotenv()
 
-pool = SimpleConnectionPool(
-    1,   # min connections
-    10,  # max connections
-    os.environ["NEON_URI"]
-)
+def get_connection():
+    return psycopg2.connect(os.environ["NEON_URI"])
