@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
-from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done, get_user_passed_challenges, has_challenge_been_failed, add_challenge_failed
-from ratelimit import is_rate_limited, is_submit_rate_limited, fetch_user_id_from_token
+from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done, get_user_passed_challenges, has_challenge_been_failed, add_challenge_failed, create_user
+from ratelimit import is_rate_limited, is_submit_rate_limited, fetch_user_data_from_token
 from fastapi import HTTPException
 import os
 import requests
@@ -35,7 +35,7 @@ def passed_challenges(token: str | None = None):
     if is_rate_limited(token):
         raise HTTPException(status_code=429, detail="rate limited")
     else:
-        github_user_id = fetch_user_id_from_token(token)
+        github_user_id = fetch_user_data_from_token(token).get("id")
         challenges = get_user_passed_challenges(github_user_id)
         return {"challenges": challenges}
 
@@ -79,7 +79,7 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
         total = resp_json.get('total')
         if correct is None or total is None:
             raise HTTPException(status_code=500, detail="submit server returned invalid response")
-        github_user_id = fetch_user_id_from_token(token)
+        github_user_id = fetch_user_data_from_token(token).get("id")
         if correct == total:
             challenge_done = has_challenge_been_done(github_user_id, challenge_name)
             if challenge_done is None:
@@ -90,3 +90,11 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
             if challenge_failed is None:
                 add_challenge_failed(github_user_id, challenge_name)
             return {"passed": False, "correct": correct, "total": total}
+
+@app.get("/login")
+def login(token: str | None = None):
+    if is_rate_limited(token):
+        raise HTTPException(status_code=429, detail="rate limited")
+    else:
+        result = create_user(access_token=token)
+        return {"result": result}

@@ -10,7 +10,7 @@ r = redis.Redis.from_url(
     decode_responses=True
 )
 
-def fetch_user_id_from_token(access_token: str):
+def fetch_user_data_from_token(access_token: str):
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/vnd.github+json"
@@ -26,13 +26,13 @@ def fetch_user_id_from_token(access_token: str):
         return None
 
     user_json = response.json()
-    return user_json.get("id")
+    return user_json
 
 def is_rate_limited(access_token: str, limit=10, window=60):
     user_id = r.get(f"token:{access_token}")
 
     if user_id is None:
-        user_id = fetch_user_id_from_token(access_token=access_token)
+        user_id = fetch_user_data_from_token(access_token=access_token).get("id")
         if user_id:
             r.setex(f"token:{access_token}", 3600, user_id)  # cache 1 hour
         else:
@@ -50,7 +50,7 @@ def is_submit_rate_limited(access_token: str, limit=3, window=300):
     user_id = r.get(f"token:{access_token}")
 
     if user_id is None:
-        user_id = fetch_user_id_from_token(access_token=access_token)
+        user_id = fetch_user_data_from_token(access_token=access_token).get("id")
         if user_id:
             r.setex(f"token:{access_token}", 3600, user_id)
         else:
