@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
-from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done, get_user_passed_challenges, has_challenge_been_failed, add_challenge_failed, create_user
+from queries import get_challenges, get_challenge_repo, has_challenge_been_done, get_user_passed_challenges, create_user, add_challenge_attempt
 from ratelimit import is_rate_limited, is_submit_rate_limited, fetch_user_data_from_token
 from fastapi import HTTPException
 import os
@@ -83,12 +83,10 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
         if correct == total:
             challenge_done = has_challenge_been_done(github_user_id, challenge_name)
             if challenge_done is None:
-                add_challenge_passed(github_user_id, challenge_name)
+                add_challenge_attempt(github_user_id, challenge_name, "success")
             return {"passed": True, "correct": correct, "total": total}
         else:
-            challenge_failed = has_challenge_been_failed(github_user_id, challenge_name)
-            if challenge_failed is None:
-                add_challenge_failed(github_user_id, challenge_name)
+            add_challenge_attempt(github_user_id, challenge_name, f"{correct}/{total}")
             return {"passed": False, "correct": correct, "total": total}
 
 @app.get("/login")
