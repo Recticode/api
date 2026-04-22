@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
-from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done, get_user_passed_challenges
+from queries import get_challenges, get_challenge_repo, add_challenge_passed, has_challenge_been_done, get_user_passed_challenges, has_challenge_been_failed, add_challenge_failed
 from ratelimit import is_rate_limited, is_submit_rate_limited, fetch_user_id_from_token
 from fastapi import HTTPException
 import os
@@ -79,12 +79,14 @@ def submit(challenge_name: str, file: UploadFile = File(...), token: str | None 
         total = resp_json.get('total')
         if correct is None or total is None:
             raise HTTPException(status_code=500, detail="submit server returned invalid response")
-
+        github_user_id = fetch_user_id_from_token(token)
         if correct == total:
-            github_user_id = fetch_user_id_from_token(token)
             challenge_done = has_challenge_been_done(github_user_id, challenge_name)
             if challenge_done is None:
                 add_challenge_passed(github_user_id, challenge_name)
             return {"passed": True, "correct": correct, "total": total}
         else:
+            challenge_failed = has_challenge_been_failed(github_user_id, challenge_name)
+            if challenge_failed is None:
+                add_challenge_failed(github_user_id, challenge_name)
             return {"passed": False, "correct": correct, "total": total}

@@ -53,6 +53,32 @@ def has_challenge_been_done(github_id, challenge_name):
     finally:
         connection.close()
 
+def add_challenge_failed(github_id, challenge_name):
+    connection = get_connection()
+
+    try:
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("INSERT INTO failed (github_user_id, challenge_name) VALUES (%s, %s)",
+                       (github_id, challenge_name))
+        connection.commit()
+        cursor.close()
+    finally:
+        connection.close()
+
+def has_challenge_been_failed(github_id, challenge_name):
+    connection = get_connection()
+
+    try:
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT challenge_name FROM failed WHERE challenge_name = %s AND github_user_id = %s",
+                       (challenge_name, github_id))
+        challenge = cursor.fetchone()
+        cursor.close()
+        return challenge
+    finally:
+        connection.close()
+
+
 def get_user_passed_challenges(github_id):
     connection = get_connection()
 
